@@ -21,4 +21,7 @@ def input_data(seq, ws):
     return output
 
 
-data = input_data(train_norm, window_size)
+train_data = input_data(train_norm, window_size)
+
+# print(train_norm)
+#print(train_norm.view(len(train_norm), 1, -1))
