@@ -18,8 +18,6 @@ test_size = 24
 train_data = y[:-test_size]
 test_data = y[-test_size:]
 
-print(f'train_set {len(train_data)}')
-print(f'test_set {len(test_data)}')
 
 # Normalize the data
 
