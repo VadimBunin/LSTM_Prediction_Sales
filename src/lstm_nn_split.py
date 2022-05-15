@@ -3,32 +3,57 @@ from turtle import forward
 import torch
 import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
 import preprocessing_normalization as pn
 import seq_label as sl
+#import model as ml
 
-train_data = sl.train_data
+df = pd.read_csv('data/Advance Retail Sales Clothing and Clothing Accessory Stores.csv',
+                 index_col=0, parse_dates=True)
+
+df.dropna(inplace=True)
+df = df[:'2019']
+y = df['RSCCASN'].values.astype(float)
+test_size = 12
+window_size = 12
+train_set = y[:-test_size]
+test_set = y[-test_size:]
+scaler = MinMaxScaler(feature_range=(-1, 1))
+train_norm = scaler.fit_transform(train_set.reshape(-1, 1))
+train_norm = torch.FloatTensor(train_norm).view(-1)
 
 
-input_size = 1
-hidden_size = 128
+def input_data(seq, ws):
+    out = []
+    L = len(seq)
+    for i in range(L-ws):
+        window = seq[i:i+ws]
+        label = seq[i+ws:i+ws+1]
+        out.append((window, label))
+    return out
+
+
+train_data = input_data(train_norm, window_size)
+input_dim = 1
+hidden_dim = 128
 num_layers = 2
-output_size = 1
-drop_prob = 0.0
+output_dim = 1
 
 
-class LSTM(nn.Module):
-    def __init__(self, input_size=1, hidden_size=128, num_layers=2, output_size=1, drop_prob=0.0):
+class LSTMnetwork(nn.Module):
+    def __init__(self, input_size=1, hidden_size=64, num_layers=2, output_size=1):
         super().__init__()
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size, hidden_size,
-                            num_layers, dropout=drop_prob)
-        self.dropout = nn.Dropout(drop_prob)
+
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers)
+
         self.linear = nn.Linear(hidden_size, output_size)
-        self.hidden = (torch.zeros(num_layers, output_size),
-                       torch.zeros(num_layers, output_size))
+
+        self.hidden = (torch.zeros(2, 1, self.hidden_size),
+                       torch.zeros(2, 1, self.hidden_size))
 
     def forward(self, seq):
         lstm_out, self.hidden = self.lstm(
@@ -38,10 +63,10 @@ class LSTM(nn.Module):
 
 
 torch.manual_seed(101)
-model = LSTM()
+model = LSTMnetwork()
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-epochs = 5
+epochs = 10
 
 start_time = time.time()
 
@@ -67,10 +92,8 @@ for epoch in range(epochs):
 print(f'\nDuration: {time.time() - start_time:.0f} seconds')
 
 future = 12
-window_size = 12
 
 # Add the last window of training values to the list of predictions
-train_norm = pn.train_norm
 preds = train_norm[-window_size:].tolist()
 
 # Set the model to evaluation mode
@@ -78,7 +101,21 @@ model.eval()
 
 for i in range(future):
     seq = torch.FloatTensor(preds[-window_size:])
+
     with torch.no_grad():
         model.hidden = (torch.zeros(2, 1, model.hidden_size),
                         torch.zeros(2, 1, model.hidden_size))
         preds.append(model(seq).item())
+
+true_predictions = scaler.inverse_transform(
+    np.array(preds[window_size:]).reshape(-1, 1))
+
+true_predictions = pd.DataFrame(true_predictions)
+true_predictions.index = df['RSCCASN'][-12:].index
+true_predictions.columns = ['Forecast']
+ax = df['RSCCASN'][-12:].plot(color='r', label='Data', figsize=(12, 8))
+true_predictions.plot(ax=ax, label='Forecast')
+plt.title('Historical Data and the Forecast')
+plt.ylabel('Million $')
+plt.legend()
+plt.show()
