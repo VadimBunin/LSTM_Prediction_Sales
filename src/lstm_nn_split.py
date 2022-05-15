@@ -66,7 +66,7 @@ torch.manual_seed(101)
 model = LSTMnetwork()
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-epochs = 10
+epochs = 70
 
 start_time = time.time()
 
