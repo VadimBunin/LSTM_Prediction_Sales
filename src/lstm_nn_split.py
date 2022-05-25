@@ -68,6 +68,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 epochs = 70
 
+
 start_time = time.time()
 
 for epoch in range(epochs):

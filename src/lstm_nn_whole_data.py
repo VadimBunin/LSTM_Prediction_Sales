@@ -111,7 +111,7 @@ true_predictions = scaler.inverse_transform(
 true_predictions = pd.DataFrame(true_predictions)
 true_predictions.index = df['RSCCASN'][-12:].index
 true_predictions.columns = ['Forecast']
-ax = df['RSCCASN'][-12:].plot(color='r', label='Data', figsize=(12, 8))
+ax = df['RSCCASN'][-12:].plot(color='r', label='Data', figsize=(8, 4))
 true_predictions.plot(ax=ax, label='Forecast')
 plt.title('Historical Data and the Forecast')
 plt.ylabel('Million $')
