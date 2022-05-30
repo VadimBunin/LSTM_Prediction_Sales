@@ -112,7 +112,7 @@ true_predictions = scaler.inverse_transform(
     np.array(preds[window_size:]).reshape(-1, 1))
 
 true_predictions = pd.DataFrame(true_predictions)
-true_predictions.index = df['RSCCASN'][-12:].index
+true_predictions.index = df['RSCCASN'][-test_size:].index
 true_predictions.columns = ['Forecast']
 ax = df['RSCCASN'][-12:].plot(color='r', label='Data', figsize=(12, 8))
 true_predictions.plot(ax=ax, label='Forecast')
